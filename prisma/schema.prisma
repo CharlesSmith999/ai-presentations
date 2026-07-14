@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------------------------------------
+// First business model — Presentation Consulting feature.
+// Mirrors src/features/presentation-consulting/domain/entities/consultation.entity.ts
+// Kept intentionally "dumb" (no business logic) — Prisma models are
+// infrastructure-layer persistence shapes, mapped to/from the domain
+// entity in infrastructure/mappers. Business rules never live here.
+// -----------------------------------------------------------------------
+model ConsultationRecord {
+  id                  String   @id
+  ownerId             String
+  goal                String
+  audienceDescription String
+  context             String
+  constraints         String[]
+  status              String
+  /// Stored as JSON; validated against ConsultationOutline (Zod) at the
+  /// application boundary whenever it is read back out.
+  outline             Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("consultations")
+}
