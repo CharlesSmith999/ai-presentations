@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { ConsultationRecord } from "@prisma/client";
 import {
   Consultation,
@@ -29,7 +30,26 @@ export function toDomainEntity(record: ConsultationRecord): Consultation {
   );
 }
 
-export function toPersistenceRecord(entity: Consultation): Omit<ConsultationRecord, "createdAt" | "updatedAt"> {
+export interface ConsultationPersistenceData {
+  id: string;
+  ownerId: string;
+  goal: string;
+  audienceDescription: string;
+  context: string;
+  constraints: string[];
+  status: string;
+  outline: Prisma.InputJsonValue | typeof Prisma.JsonNull;
+}
+
+/**
+ * Prisma's generated input types require an explicit `Prisma.JsonNull`
+ * marker for a JSON column that should be stored as SQL NULL — a plain
+ * JS `null` is not assignable there, since Prisma also needs to
+ * distinguish "leave this field alone" (`undefined`) from "set it to
+ * JSON null" (`Prisma.JsonNull`). This mapping is the one place that
+ * translates our domain's plain `null` into that Prisma-specific shape.
+ */
+export function toPersistenceRecord(entity: Consultation): ConsultationPersistenceData {
   return {
     id: entity.id,
     ownerId: entity.ownerId,
@@ -38,7 +58,7 @@ export function toPersistenceRecord(entity: Consultation): Omit<ConsultationReco
     context: entity.context,
     constraints: entity.constraints,
     status: entity.status,
-    outline: entity.outline as unknown as ConsultationRecord["outline"],
+    outline: entity.outline === null ? Prisma.JsonNull : (entity.outline as unknown as Prisma.InputJsonValue),
   };
 }
 
